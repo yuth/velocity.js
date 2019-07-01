@@ -46,6 +46,7 @@
 <h>"end"                          { this.popState(); return 'END'; }
 <h>"{end}"                        { this.popState(); return 'END'; }
 <h>"break"                        { this.popState(); return 'BREAK'; }
+<h>"return"[ ]*/[^a-zA-Z0-9_]+    { return 'RETURN'; }
 <h>"foreach"[ ]*/[^a-zA-Z0-9_]+   { return 'FOREACH'; }
 <h>"noescape"/[^a-zA-Z0-9_]+      { return 'NOESCAPE'; }
 <h>"define"[ ]*/[^a-zA-Z0-9_]+    { return 'DEFINE'; }
@@ -105,15 +106,15 @@
                                         this.popState();
                                       }
 
-                                      return 'CLOSE_PARENTHESIS'; 
+                                      return 'CLOSE_PARENTHESIS';
                                     } else {
-                                      return 'CONTENT'; 
+                                      return 'CONTENT';
                                     }
                                   }
 <mu,h,run,c,i>"["[\s]*/[\-$"'0-9{\[\]]+     { this.begin("i"); return 'BRACKET'; }
-<mu,h,run,c,i>"]"                 { 
+<mu,h,run,c,i>"]"                 {
                                     if (this.popState() === "i") {
-                                      return 'CLOSE_BRACKET'; 
+                                      return 'CLOSE_BRACKET';
                                     } else {
                                       return 'CONTENT';
                                     }

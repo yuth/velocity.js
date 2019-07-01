@@ -99,6 +99,12 @@ module.exports = function(Velocity, utils) {
             str += ast.value;
           break;
 
+          case 'return':
+            this._state.stop = true;
+            if(ast.value) {
+              str += this.format(this.getExpression(ast.value, true));
+            }
+          break;
           default:
             str += typeof ast === 'string' ? ast : this.getBlock(ast);
           break;

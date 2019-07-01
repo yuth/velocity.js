@@ -1,9 +1,7 @@
 module.exports = function(Velocity, utils) {
-
   'use strict';
 
   function getSize(obj) {
-
     if (utils.isArray(obj)) {
       return obj.length;
     } else if (utils.isObject(obj)) {
@@ -17,36 +15,35 @@ module.exports = function(Velocity, utils) {
    * unicode转码
    */
   function convert(str) {
-
     if (typeof str !== 'string') return str;
 
-    var result = ""
-    var escape = false
+    var result = '';
+    var escape = false;
     var i, c, cstr;
 
-    for (i = 0 ; i < str.length ; i++) {
+    for (i = 0; i < str.length; i++) {
       c = str.charAt(i);
-      if ((' ' <= c && c <= '~') || (c === '\r') || (c === '\n')) {
+      if ((' ' <= c && c <= '~') || c === '\r' || c === '\n') {
         if (c === '&') {
-          cstr = "&amp;"
-          escape = true
+          cstr = '&amp;';
+          escape = true;
         } else if (c === '<') {
-          cstr = "&lt;"
-          escape = true
+          cstr = '&lt;';
+          escape = true;
         } else if (c === '>') {
-          cstr = "&gt;"
-          escape = true
+          cstr = '&gt;';
+          escape = true;
         } else {
-          cstr = c.toString()
+          cstr = c.toString();
         }
       } else {
-        cstr = "&#" + c.charCodeAt().toString() + ";"
+        cstr = '&#' + c.charCodeAt().toString() + ';';
       }
 
-      result = result + cstr
+      result = result + cstr;
     }
 
-    return escape ? result : str
+    return escape ? result : str;
   }
 
   function getter(base, property) {
@@ -79,13 +76,15 @@ module.exports = function(Velocity, utils) {
   utils.mixin(Velocity.prototype, {
     // 增加某些函数，不需要执行html转义
     addIgnoreEscpape: function(key) {
+      if (!utils.isArray(key)) key = [key];
 
-      if (!utils.isArray(key)) key = [key]
-
-      utils.forEach(key, function(key) {
-        this.config.unescape[key] = true
-      }, this)
-
+      utils.forEach(
+        key,
+        function(key) {
+          this.config.unescape[key] = true;
+        },
+        this
+      );
     },
 
     /**
@@ -95,7 +94,6 @@ module.exports = function(Velocity, utils) {
      * 字符串，如果没有返回变量自身，比如$foo
      */
     getReferences: function(ast, isVal) {
-
       if (ast.prue) {
         var define = this.defines[ast.id];
         if (utils.isArray(define)) {
@@ -105,18 +103,17 @@ module.exports = function(Velocity, utils) {
       }
       var escape = this.config.escape;
 
-      var isSilent = this.silence || ast.leader === "$!";
-      var isfn     = ast.args !== undefined;
-      var context  = this.context;
-      var ret      = context[ast.id];
-      var local    = this.getLocal(ast);
+      var isSilent = this.silence || ast.leader === '$!';
+      var isfn = ast.args !== undefined;
+      var context = this.context;
+      var ret = context[ast.id];
+      var local = this.getLocal(ast);
 
       var text = Velocity.Helper.getRefText(ast);
 
       if (text in context) {
-        return (ast.prue && escape) ? convert(context[text]) : context[text];
+        return ast.prue && escape ? convert(context[text]) : context[text];
       }
-
 
       if (ret !== undefined && isfn) {
         ret = this.getPropMethod(ast, context, ast);
@@ -125,24 +122,25 @@ module.exports = function(Velocity, utils) {
       if (local.isLocaled) ret = local['value'];
 
       if (ast.path) {
+        utils.some(
+          ast.path,
+          function(property, i, len) {
+            if (ret === undefined) {
+              this._throw(ast, property);
+            }
 
-        utils.some(ast.path, function(property, i, len) {
-
-          if (ret === undefined) {
-            this._throw(ast, property);
-          }
-
-          // 第三个参数，返回后面的参数ast
-          ret = this.getAttributes(property, ret, ast);
-
-        }, this);
+            // 第三个参数，返回后面的参数ast
+            ret = this.getAttributes(property, ret, ast);
+          },
+          this
+        );
       }
 
       if (isVal && ret === undefined) {
         ret = isSilent ? '' : Velocity.Helper.getRefText(ast);
       }
 
-      ret = (ast.prue && escape) ? convert(ret) : ret;
+      ret = ast.prue && escape ? convert(ret) : typeof ret === 'function' ? ret() : ret;
 
       return ret;
     },
@@ -151,20 +149,23 @@ module.exports = function(Velocity, utils) {
      * 获取局部变量，在macro和foreach循环中使用
      */
     getLocal: function(ast) {
-
       var id = ast.id;
       var local = this.local;
       var ret = false;
 
-      var isLocaled = utils.some(this.conditions, function(contextId) {
-        var _local = local[contextId];
-        if (id in _local) {
-          ret = _local[id];
-          return true;
-        }
+      var isLocaled = utils.some(
+        this.conditions,
+        function(contextId) {
+          var _local = local[contextId];
+          if (id in _local) {
+            ret = _local[id];
+            return true;
+          }
 
-        return false;
-      }, this);
+          return false;
+        },
+        this
+      );
 
       return {
         value: ret,
@@ -222,7 +223,6 @@ module.exports = function(Velocity, utils) {
      * $foo.bar()求值
      */
     getPropMethod: function(property, baseRef, ast) {
-
       var id = property.id;
       var ret = '';
 
@@ -238,53 +238,49 @@ module.exports = function(Velocity, utils) {
 
         return ret;
 
-      // setter 处理
+        // setter 处理
       } else if (id.indexOf('set') === 0 && !baseRef[id]) {
-
         baseRef[id.slice(3)] = this.getLiteral(property.args[0]);
         // $page.setName(123)
-        baseRef.toString = function() { return ''; };
+        baseRef.toString = function() {
+          return '';
+        };
         return baseRef;
-
       } else if (id.indexOf('is') === 0 && !(id in baseRef)) {
-
         return getter(baseRef, id.slice(2));
       } else if (id === 'keySet' && !baseRef[id]) {
-
         return utils.keys(baseRef);
-
       } else if (id === 'entrySet' && !baseRef[id]) {
-
         ret = [];
         utils.forEach(baseRef, function(value, key) {
-          ret.push({key: key, value: value});
+          ret.push({ key: key, value: value });
         });
 
         return ret;
-
       } else if (id === 'size' && !baseRef[id]) {
-
         return getSize(baseRef);
       } else if (id === 'put' && !baseRef[id]) {
-        return baseRef[this.getLiteral(property.args[0])] = this.getLiteral(property.args[1]);
+        return (baseRef[this.getLiteral(property.args[0])] = this.getLiteral(property.args[1]));
       } else if (id === 'add' && !baseRef[id] && typeof baseRef.push === 'function') {
         return baseRef.push(this.getLiteral(property.args[0]));
       } else if (id === 'subList' && !baseRef[id]) {
         return baseRef.slice(this.getLiteral(property.args[0]), this.getLiteral(property.args[1]));
       } else {
-
         ret = baseRef[id];
         var args = [];
 
-        utils.forEach(property.args, function(exp) {
-          args.push(this.getLiteral(exp));
-        }, this);
+        utils.forEach(
+          property.args,
+          function(exp) {
+            args.push(this.getLiteral(exp));
+          },
+          this
+        );
 
         if (ret && ret.call) {
-
           var that = this;
 
-          if(typeof baseRef === 'object' && baseRef){
+          if (typeof baseRef === 'object' && baseRef) {
             baseRef.eval = function() {
               return that.eval.apply(that, arguments);
             };
@@ -295,13 +291,11 @@ module.exports = function(Velocity, utils) {
           } catch (e) {
             var pos = ast.pos;
             var text = Velocity.Helper.getRefText(ast);
-            var err = ' on ' + text + ' at L/N ' +
-              pos.first_line + ':' + pos.first_column;
+            var err = ' on ' + text + ' at L/N ' + pos.first_line + ':' + pos.first_column;
             e.name = '';
             e.message += err;
             throw new Error(e);
           }
-
         } else {
           this._throw(ast, property, 'TypeError');
           ret = undefined;
@@ -329,6 +323,5 @@ module.exports = function(Velocity, utils) {
       e.name = errorName || 'ReferenceError';
       throw e;
     }
-  })
-
-}
+  });
+};

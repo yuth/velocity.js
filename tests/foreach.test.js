@@ -24,6 +24,12 @@ describe('Loops', function() {
     assert.equal('hanwen1,hanwen2,hanwen3', render(vm, data))
   })
 
+  it('#foreach with map hasNext as method', function() {
+    var vm   = '#foreach($product in $products)$product.name#if($foreach.hasNext()),#end#end'
+    var data = {products: {product1: {name: "hanwen1"}, product2: {name: "hanwen2"}, product3: {name: "hanwen3"}}};
+    assert.equal('hanwen1,hanwen2,hanwen3', render(vm, data))
+  })
+
   it('#foreach with map keySet', function() {
     var vm = '#foreach($key in $products.keySet())' +
     ' $key => $products.get($key) #end'
@@ -41,14 +47,14 @@ describe('Loops', function() {
 
   it('#foreach with nest non-empty foreach', function() {
     var vm = '#foreach($i in [1..2])' +
-    '[#foreach($j in [1..2])$j#if($foreach.hasNext),#end#end]' + 
+    '[#foreach($j in [1..2])$j#if($foreach.hasNext),#end#end]' +
     '#if($foreach.hasNext),#end#end'
     assert.equal('[1,2],[1,2]', render(vm))
   })
 
   it('#foreach with nest empty foreach', function() {
     var vm = '#foreach($i in [1..2])' +
-    '[#foreach($j in [])$j#if($foreach.hasNext),#end#end]' + 
+    '[#foreach($j in [])$j#if($foreach.hasNext),#end#end]' +
     '#if($foreach.hasNext),#end#end'
     assert.equal('[],[]', render(vm))
   })

@@ -216,7 +216,7 @@ module.exports = function(Velocity, utils) {
           local.foreach = {
             count: i + 1,
             index: i,
-            hasNext: i + 1 < len
+            hasNext: () => i + 1 < len
           };
           local.velocityCount = i + 1;
 
@@ -234,7 +234,7 @@ module.exports = function(Velocity, utils) {
           local.foreach = {
             count: i + 1,
             index: i,
-            hasNext: i + 1 < len
+            hasNext: () => i + 1 < len
           };
           local.velocityCount = i + 1;
           this.local[contextId] = local;
